@@ -1,0 +1,865 @@
+
+
+SQL メモ
+
+・射影
+SELECT * 
+
+・選択
+WHERE　～　
+
+・BETWEEN　の使い方
+
+あるカラムのここからここまでを取りたいという範囲選択に使う
+
+SELECT * FROM 'players' WHERE age BETWEEN 20［最小］ AND 50［最大］;
+
+・IN　の使い方
+
+複数の条件での値を取得したい時に使う
+
+SELECT * FROM 'players' WHERE age IN(20, 30, 40);
+
+
+・IS　NULL　と　IS NOT　NULL
+
+・LIKE　と　％　
+
+LIKE演算子を使うことであいまい検索ができる
+
+前方一致と後方一致
+前方一致なら末尾に％
+後方一致なら先頭に％
+中に含むなら両側に％
+ワイルドカードは％がある側がなんでもOK側
+ワイルドカードは’’に挟む！
+
+SELECT * FROM 'plyaers' WHERE name LIKE '%ニョ'; 
+
+否定形は　
+SELECT * FROM 'players' WHERE name NOT LIKE '%ニョ';
+
+
+・NOTの使い方
+
+NOTやAND、ORは論理演算子
+
+WHEREの後にNOTを付けることで検索条件の逆を検索できる
+
+SELECT * FROM `countries` WHERE NOT `group_name` = 'A'
+
+・POWER、POWの使い方
+
+POWERは「べき乗」を求める関数
+第一引数に基数、第二引数にべき乗の数
+つまり、第一引数を第二引数乗する
+
+例えば　POWER(3,2)　＝　9　　　3の2乗
+　　　　POW(4,5)　　＝　1024　　4の5乗
+
+
+・DISTINCTの使い方
+
+DISTINCTは重複を含まない
+SELECTの後につけてDISTINCTの後にカラムを付ける
+
+SELECT DISTINCT position FROM `players`
+
+
+・CONCATの使い方
+
+文字列同士で結合
+SELECT CONCAT(Column１,　Column２) AS CONCATの戻り値
+
+文字列同士の結合（文字列とカラム）
+CONCAT(’文字列’,Column）
+
+NULLの扱い
+自動で空白スペースへと変換してくれる
+
+数値型と結合
+CONCAT('文字列１', CONVERT(NVARCHAR, 数値型のデータ))
+CONCAT('文字列１', CAST(数値型のデータ AS VARCHAR))
+
+日付型と結合
+CONCAT(’文字列１’,CONVERT(NVARCHAR, 日付型のデータ[, style]))
+CONCAT('文字列１',FORMAT(日付型のデータ, FORMAT[, culture]))
+
+複数連結することも可能　例
+SELECT CONCAT(name, "選手のポジションは\'" , position, "\'です") FROM `players` 
+
+
+・ORDER BY　複数ある時の並べ方
+
+複数あってもそれぞれに並び順を指定できる
+優先順位順に記入する
+SELECT * FROM `players` ORDER BY height DESC, weight DESC
+
+
+・SUBSTRING　の使い方
+
+文字列を切り取って指定できる
+SUBSTRING([文字列], [切り取り開始地点], [切り取る文字数]);
+例　SELECT id, country_id, uniform_num, SUBSTRING(position, 1, 1), name, club, birth, height, weight FROM `players` 
+
+
+・RIGHT　の使い方
+
+右から文字列の切り取りを行う
+RIGHT([対象の文字列], [取得文字数])
+
+
+・LEFT　の使い方
+
+左から文字列の切り取りを行う
+LEFT([対象の文字列], [取得文字数])
+
+
+・CHAR_LENGTH　、　CHARACTER_LENGTH　の使い方
+
+文字列の長さを得られる
+SELECT name, CHAR_LENGTH(name) AS len FROM `countries` ORDER BY len DESC;
+ギリシャ　4
+
+
+・LENGTH　の使い方
+
+文字列の長さのバイト単位数を返す
+ギリシャ　12
+
+
+・BIT_LENGTH　の使い方
+
+文字列の長さのビット単位数を返す
+ギリシャ　96
+
+
+・DATE_FORMAT　の使い方
+
+日付型からの変換に使う。
+対象の日付を指定した形式で返す
+DATE_FORMAT(date, format)　formatにはクオーテーションを忘れずに。
+指定子（％〇）で指定する
+この時中身は日本語でもスラでもハイフンでも対応可能で％特殊文字を判別する。
+
+SELECT name, DATE_FORMAT(birth, '%Y年%m月%d日') FROM `players`;
+
+
+・TIME_FORMAT　の使い方
+
+対象の時刻を表す文字列を指定の形式で返す
+TIME_FORMAT(time, format)
+
+
+・STR_TO_DATE　の使い方
+
+DATE_FORMATの逆で文字列を日付型にできる。
+数値型も日付にできる。
+
+例：
+SELECT customer_id, STR_TO_DATE(application_date, '%Y%m%d') FROM customer LIMIT 10;
+
+
+・FROM_UNIXTIME　の使い方
+
+UNIX時間を日付型に変換できる。
+UNIX時間とは1970年0時0分0秒を「0」として経過時間を表す。
+つまり、1970年0時1分0秒は「60」となる。
+この数値をエポック秒という。
+第二引数に形式を指定することで、形式を変更できる。
+
+例：
+SELECT sales_ymd, FROM_UNIXTIME(sales_epoch), receipt_no, receipt_sub_no FROM `receipt` LIMIT 10;
+SELECT sales_ymd, FROM_UNIXTIME(sales_epoch, '%m'//月だけ抽出), receipt_no, receipt_sub_no FROM `receipt` LIMIT 10;
+
+
+・IFNULL　の使い方
+
+対象の列にNULLがあれば置換する
+SELECT IFNULL(player_id, '9999'), goal_time FROM `goals`;
+
+
+・COALESCE　の使い方
+
+IFNULL同様、NULLに第二引数をあてる
+
+リスト内での最初の非NULL値を返す。
+
+COALESCE（name, id, NULL) ➡　名前があれは名前、名前が無ければID、IDが無ければNULLを返す。
+
+例：
+SELECT shop.name,
+       COALESCE(
+           shop.building_name,
+           shop.area_name,
+           "地域情報なし"
+       ) AS spot
+FROM shop
+
+例でいけばspot列として店舗のビル名、ビル名がNULLならエリア名、エリア名もNULLなら”地域情報なし”の文字列を入れれる。
+
+
+・CASE　式の使い方
+
+単純CASE式
+
+CASE gender(列名)
+  WHEN '男'(値） THEN 1（新しいデータ）
+  WHEN '女'(値） THEN 2（新しいデータ）
+  ELSE 99（新しいデータ）
+END
+
+検索CASE式
+
+CASE
+  WHEN gender = '男' THEN 1
+  WHEN gender = '女' THEN 2
+  ELSE 99
+END
+
+ENDを忘れがち、気を付ける
+
+例：SELECT (CASE WHEN player_id IS NULL THEN '9999' ELSE player_id END )AS player, goal_time FROM `goals`;
+
+こんな使い方もできる
+男の数と女の数を同時に数えられる
+SELECT
+    SUM(CASE WHEN gender = 1 THEN 1 ELSE 0 END) AS male_count,
+    SUM(CASE WHEN gender = 2 THEN 1 ELSE 0 END) AS female_count
+FROM member
+
+
+・AVG,MAX,MIN　の使い方
+
+SUMとかと一緒
+平均がでる
+GROUP BY　句と一緒に使いがち、しっかり覚える
+
+
+・GROUP　BY　句　の使い方
+
+取得したいデータをグループ化したい場合につかう。
+GROUPBYをした場合はSELECT句に入るデータが限られる。
+基本的にはGROUP BY句に使った項目か、集計関数を使用した項目になる。
+逆に言えば、SELECTに含めたい場合はGROUP BY句にも含める必要がある。
+
+構文的には副問合せを使用する方がすっきりする。（GROUPBY句が全く不要になる）
+
+
+・COUNT　の使い方
+
+グループ関数という。
+グループ関数を使うと、指定したグループ単位にデータをまとめて表示することができる。
+
+例：
+SELECT COUNT(*) AS '日本のゴール数'　FROM goals　WHERE 714 <= player_id AND player_id <= 736
+
+COUNT(1)で全件カウントする。
+ちなみにCOUNT（○○）の列名の値がNULLだった場合はカウントできない。
+
+重複をカウントしない場合は、
+例：
+SELECT COUNT(DISTINCT customer_id) FROM receipt;
+のようにカラム名の前にDISTINCTを置く。
+
+
+・INNER　JOIN　の使い方
+
+SELECT *
+FROM　結合されるテーブル名　別名１
+INNER JOIN（JOINのみでもOK）　結合するテーブル名　別名２
+ON　別名１．Column1　=　別名２．Column2
+
+NULLは省略される
+
+
+・LEFT JOIN　の使い方
+
+INNER JOINとほぼ一緒だが、
+メイン側のテーブルで結合するカラムが存在している場合は
+結合する側のテーブルデータがNULLでも表示される
+
+
+・自己結合　の使い方
+
+基本的には普通のJOINと同じだが、
+同じテーブル結合を行うことができる。
+同じ結合の場合は別名を付けておく必要があるため注意。
+
+考え方としては、同じテーブル内でデータを組み替えて見やすくするときなどに使う。
+
+例
+SELECT p.kickoff, mc.name AS my_country, ec.name AS enemy_country
+FROM pairings p
+JOIN countries mc ON mc.id = p.my_country_id
+JOIN countries ec on ec.id = p.enemy_country_id
+
+
+・CROSS　JOIN　の使い方
+
+CROSS JOIN　は2つのテーブルのデータを全て組み合わせたデータ。
+
+例：
+SELECT COUNT(1)
+FROM store
+CROSS JOIN product
+;
+
+
+・ON句の条件について
+
+テーブル結合の条件として、
+WHERE句で絞る場合と、ON句で絞る場合で結果が異なる場合がある。
+結果が異なるのは、外部結合のみであり、
+JOIN ON句で絞り込み条件を書くと、「結果を絞るのではなく、結合前のテーブルのレコードを絞ることになる。」
+
+
+・副問合せ　の使い方
+
+SELECT句、WHERE句、FROM句で副問合せが可能である。
+SELECT句で使う場合は副問合せが返すデータは単一行データである必要性がある
+
+例１
+SELECT g.id, g.goal_time, (SELECT p.name FROM players p WHERE p.id = g.player_id) AS player_name
+FROM goals g
+WHERE g.player_id IS NOT NULL
+
+また、SELECT句で問合せした値を使うことができる。
+つまり、参照したいデータを取り出すSQLをSELECT句の列名にそのまま使えるイメージ。
+WHERE句に結合先のデータを使うこともできる
+
+例２
+SELECT p1.position, MAX(p1.height) AS 最大身長, 
+    (
+    SELECT p2.name
+    FROM players p2
+    WHERE MAX(p1.height) = p2.height AND p1.position = p2.position
+    ) AS 名前
+FROM players p1
+GROUP BY p1.position
+
+
+FROM句で使う場合は副問合せのSELECT文がテーブルの様に結合させることができる
+GROUP BY 句を使うと、
+「SELCTにはグループ関数を用いた列か、GROUPBY句で指定した列しか選択できない」
+という制約ができるが、FROM句の副問合せで解消できる
+
+例
+SELECT p1.position, p1.最大身長, p2.name, p2.club
+FROM (
+    SELECT position, MAX(height) AS 最大身長　// グループ関数かGROUP化した列のみ
+    FROM players
+    GROUP BY position
+    ) p1
+LEFT JOIN players p2 
+ON p1.最大身長 = p2.height 
+AND p1.position = p2.position
+
+結合条件は複数選択できることを覚えておくといい
+
+
+WHERE句に副問合せを使う場合も副問合せが返すデータは単一行だけにする必要がある。
+ただし、IN句などを使う条件であれば複数行返してもOK
+
+SELECT uniform_num, position, name, height
+FROM players
+WHERE height < (SELECT AVG(height) FROM players)
+
+
+・HAVING句　の使い方
+
+GROUP BY句を使った時の条件式はWHERE句ではなくHAVING句に記述する
+条件式にはデータから算術した値も使用できる
+
+例
+SELECT group_name, MAX(ranking), MIN(ranking)
+FROM countries
+GROUP BY group_name
+HAVING MAX(ranking) -  MIN(ranking) > 50
+
+テーブル結合している時はWHERE句も使用できる
+
+
+・UNION句　の使い方
+
+UNION句を使うことで縦方向にデータを繋ぐことができる
+UNION句はデフォルトでDISTINCTになっており、ALLを使えば重複分も表示できる
+
+例
+SELECT '1980' AS '誕生年', COUNT(id)
+FROM players
+WHERE birth BETWEEN '1980-1-1' AND '1980-12-31'
+UNION
+SELECT '1981', COUNT(id)
+FROM players
+WHERE birth BETWEEN '1981-1-1' AND '1981-12-31'
+
+UNIONで繋げたいSELECT句の列数は上下で一緒にする必要がある
+また、複数繋げたい場合はそのままUNION句を下に記述すればよい
+
+UNION句の後にALLを加えることで重複したデータを取得できる（2件以上重複する）
+
+
+・View　の作成
+
+ViewとはSELECT文で取得されるデータ。
+そこにはデータ自体はないが、見せたいデータだけを見せることができる。
+簡単に言えば私たちがメソッドでDBを見るのと一緒だろう。
+・毎回SQLを打つ必要がなく、作業効率が高まる。
+・UPDATEやDELETEの誤動作が減るのでセキュリティにも良い。
+・見せたくないデータは表に出さないようにできる。
+といったメリットがある。
+
+CREATE VIEW　ビュー名　AS　定義[WITH CHECK OPTION];
+
+例
+CREATE VIEW teachers_view AS
+ SELECT teacher_id, name, class_id FROM teachers;
+
+ASの後に続けてViewに表示する内容を取得するSELECT文を記述する
+
+使い方
+テーブル参照と同様にSELECT文で呼び出す
+
+SELECT * FROM teachers_view;
+
+Viewの変更
+
+Viewの定義を変更する場合は、
+ALTER VIEW　ビュー名　AS　定義；
+CREATE OR REPLACE　VIEW　ビュー名　AS　定義；
+を使う
+
+定義部分は変更後のSELECT文を記述する
+
+例
+ALTER VIEW teachers_view AS
+SELECT teacher_id,name,class_id,age FROM teachers;
+
+通常のテーブルと同様にUPDATEもできる。
+この場合はデータ本体も更新される。
+
+例
+UPDATE teachers_view SET name = 'シュウタ' WHERE teacher_id = 1;
+
+ただし、VIEWのデータ更新には制約がある。
+・1つの実テーブルから定義されているViewに対してのみデータの更新が可能
+・複数の実テーブルから定義されているViewはデータの更新ができない
+
+Viewの削除
+
+Viewの削除を行う場合は
+DROP VIEW (IF EXISTS) view名;
+
+IF EXISTS　をすることでViewが存在しない場合でもエラーにならない。
+
+
+・TIMESTAMPDIFF　の使い方
+
+指定した単位で、2つの日付の差を返す。
+TIMESTAMPDIFF(YEAR, '2018-01-10 11:30:20', '2020-01-20 13:40:30')  ➡　2
+単位はYEAR（年）、MONTH（月）、DAY（日）、WEEK（週）、QUARTER（四半期）、
+HOUR（時間）、MINUTE（分）、SECOND（秒）、MICROSECOND（マイクロ秒）
+
+
+・日付の条件
+
+何日から何日までの「まで」の方は時間（23:59:59）まで指定しないと範囲に含まれない。
+
+
+・日付の計算
+
+SELECT p.kickoff, ADDTIME(p.kickoff, '-12:00:00') AS kickoff_jp
+
+SELECT p.kickoff, SUBTIME(p.kickoff, '12:00:00') AS kickoff_jp
+
+SELECT p.kickoff, DATE_ADD(p.kickoff, INTERVAL '-12' HOUR) AS kickoff_jp
+
+SELECT p.kickoff, DATE_SUB(p.kickoff, INTERVAL '12' HOUR) AS kickoff_jp
+
+SELECT p.kickoff, ADDDATE(p.kickoff, INTERVAL '-12' HOUR) AS kickoff_jp
+
+SELECT p.kickoff, SUBDATE(p.kickoff, INTERVAL '12' HOUR) AS kickoff_jp
+
+SELECT p.kickoff, CONVERT_TZ(p.kickoff, '+00:00', '-12:00') AS kickoff_jp
+
+すべて同じ結果を返す。
+
+
+・SELECT文には　数字を表示することができる
+
+SELECT 10 AS age, COUNT(id) AS player_count FROM players 
+WHERE TIMESTAMPDIFF(YEAR, birth, '2014-06-13') BETWEEN 10 AND 19 
+UNION 
+SELECT 20 AS age, COUNT(id) AS player_count FROM players 
+WHERE TIMESTAMPDIFF(YEAR, birth, '2014-06-13') BETWEEN 20 AND 29 
+UNION 
+SELECT 30 AS age, COUNT(id) AS player_count FROM players 
+WHERE TIMESTAMPDIFF(YEAR, birth, '2014-06-13') BETWEEN 30 AND 39 
+UNION 
+SELECT 40 AS age, COUNT(id) AS player_count FROM players 
+WHERE TIMESTAMPDIFF(YEAR, birth, '2014-06-13') BETWEEN 40 AND 49;
+
+
+・TRUNCATE　の使い方
+
+TRUNCATE(X, D)　
+D小数点に切り捨てて、数字Xを返す。Dが0の場合は結果に小数点または小数部が含まれない。
+Dを負の数に指定すると、値Xの小数点左側のD桁をゼロにする。
+例：
+SELECT TRUNCATE(TIMESTAMPDIFF(YEAR, birth, '2014-06-13'), -1) AS age, COUNT(id) AS player_count
+FROM players GROUP BY age
+
+10代、20代、30代、40代と出すことができる。
+
+
+・FLOOR　の使い方
+
+FLOOR(X)
+X以下で最大の整数値を返す。
+それと算術を合わせることで複雑な値を返すことができる
+
+例：
+SELECT FLOOR(TIMESTAMPDIFF(YEAR, birth, '2014-06-13') / 5) * 5   AS age, COUNT(id) AS player_count
+FROM players GROUP BY age;
+
+年齢を5で割った後の最大の整数を5倍することで5歳ごとに年齢を区切ることが可能。
+19歳　➡　3.8　➡　3　➡　15
+
+
+・LIMIT句　の使い方
+
+引数1つでその数までを抽出、引数が2個あると第一引数がスタート位置、第二引数が抽出する数
+
+
+・ド・モルガンの法則
+
+A、Bの集合に対して
+「AかつBではない」　＝　「Aではない、またはBではない」
+「AまたはBではなく」　＝　「Aではない、かつBではない」
+
+
+・REGEXP　の使い方
+
+正規表現を使ったパターンマッチングを行うことができる
+
+例：
+SELECT * FROM `customer` WHERE status_cd REGEXP '^[A-F]' LIMIT 10;
+
+特殊記号  .は文字
+.　　　　➡　任意の1文字に一致
+[...]　　➡　カッコ内のいずれかの文字に一致
+　　　　　　[abc]　　a,b,cのいずれかに一致
+            [a-z]　　aからzのいずれかに一致
+            [^a-z]　 aからz以外に一致
+*　　　　➡　直前の文字の0回以上の繰り返し（なくてもよい）に一致
++　　　　➡　直前の文字の1回以上の繰り返しに一致
+?　　　　➡　直前の文字があっても無くても一致
+..|..|.. ➡　複数の文字からなる文字列を指定できる
+^..  　　➡　先頭の文字に一致
+..$　　　➡　末尾の文字に一致
+(abc)　　➡　複数の文字を指定できる
+{n, m}　 ➡　nは最小回数、mは最大回数
+　　　　　　 {n}     直前のパターンのn回連続に一致
+             {n,}    直前のパターンのn回以上連続に一致
+             {,m}    直前のパターンのm回以下連続に一致
+             {n,m}   直前のパターンのn回以上、m回以下の連続に一致
+
+
+・BINARY　の使い方
+
+正規表現の大文字、小文字を区別することができる
+
+例：
+SELECT * FROM `customer` WHERE status_cd REGEXP BINARY '^[A-F]' LIMIT 10;
+
+
+・中央値、最頻値
+
+MySQLではver.8.0以降Window関数で出せるらしい
+それ以前は出せないので一個一個やらないといけないが、全く理解できなかった。
+
+
+・分散値
+
+VAR_POP()（VARIENCE())　母標準分散を返す。標本分散（標本のばらつきの大きさを表すのに適した分散値で母分散の推定値には不適切）
+VAR_SAMP()　標本分散を返す。不偏分散（母集団のばらつきの大きさを表す母分散に等しいため、母分散の推定値として適切）
+
+VAR_POP(expr)  = SUM((expr - (SUM(expr)/COUNT(expr))^2)/COUNT(expr)
+VAR_SAMP(expr) = SUM((expr - (SUM(expr)/COUNT(expr))^2)/(COUNT(expr) - 1)
+
+※　SUM(expr)　　➡　実現値の合計
+　　COUNT(expr)　➡　要素数
+　　SUM(expr)/COUNT(expr)　➡　平均
+
+例：
+SELECT
+    store_cd,
+    VAR_POP(amount) AS vars_amount
+FROM receipt
+GROUP BY store_cd
+ORDER BY vars_amount DESC 
+LIMIT 5；
+
+
+・標準偏差　
+
+STDDEV_POP()　 母標準偏差（VAR_POP()の平方根）を返す。
+STDDEV_SAMP()　標本標準偏差（VAR_SAMP()の平方根）を返す。
+
+※STD()、STDDEV()は標準外のSQLでSTDDEV_POP()と同様。
+
+例：
+SELECT store_cd, STDDEV_POP(amount) AS '標準偏差' 
+FROM `receipt` 
+GROUP BY store_cd
+ORDER BY '標準偏差' DESC
+LIMIT 5;
+
+SELECT store_cd, STDDEV_SAMP(amount) AS '標準偏差' 
+FROM `receipt` 
+GROUP BY store_cd
+ORDER BY '標準偏差' DESC
+LIMIT 5;
+
+
+・WITH句　の使い方
+
+サブクエリ結果に名前をつけて、クエリ実行中のみ有効な一時テーブルを作成する機能。
+複数のWITH句を使用する場合、一個一個継承した方が「カラムが曖昧」というエラーが出にくい。
+
+例：
+WITH sales_amount_by_date AS (
+    SELECT
+        sales_ymd,
+        SUM(amount) AS amount
+    FROM receipt
+    GROUP BY
+        sales_ymd
+),
+sales_amount_by_date_with_lag as (
+    SELECT
+        sales_ymd,
+        LAG(sales_ymd, 1) OVER(ORDER BY sales_ymd) lag_ymd,
+        amount,
+        LAG(amount, 1) OVER(ORDER BY sales_ymd) AS lag_amount
+    FROM sales_amount_by_date　// 上のWITH句から引用
+)
+SELECT
+    sales_ymd,
+    amount,
+    lag_ymd,
+    lag_amount,
+    amount - lag_amount AS diff_amount
+FROM sales_amount_by_date_with_lag　//　上のWITH句から引用
+ORDER BY
+    sales_ymd
+LIMIT 10
+;
+
+例：
+WITH
+　cte1 AS (SELECT a, b FROM table1),
+　cte2 AS (SELECT c, d FROM table2)
+SELECT b,d FROM cte1 JOIN cte2
+ON cte1.a = cte2.c;
+
+ここでのcte1,cte2が一時テーブルとなる。
+
+◎WHERE句の副問合せ
+SELECT * FROM city WHERE CountryCode IN (
+ SELECT CountryCode FROM countrylanguage
+ WHERE Language = 'Spanish' AND CountryCode IN (
+  SELECT Code FROM country WHERE Continent = 'Europe'
+ )
+);
+
+◎JOIN句
+SELECT a.* FROM city a
+JOIN countrylanguage b
+  ON b.CountryCode = a.CountryCode AND b.Language = 'Spanish'
+JOIN country c
+  ON c.Code = b.CountryCode AND c.Continent = 'Europe';
+
+◎WITH句
+WITH europe_using_spanish AS (
+  SELECT a.CountryCode FROM countrylanguage a
+  JOIN country b ON b.Code = a.CountryCode
+    AND a.Language = 'Spanish' AND b.Continent = 'Europe'
+)
+SELECT a.* FROM city a
+JOIN europe_using_spanish b ON b.CountryCode = a.CountryCode;
+
+上記3つのクエリは全て同じ内容だが、WITH句が可読性が高い。
+
+WITH句は,（カンマ）で繋ぎ合わすことができ、
+それ以降のクエリ中でも使うことができる。
+
+例：
+WITH get_top5_amount_id AS (
+  SELECT customer_id AS id, SUM(amount)
+  FROM payment
+  GROUP BY 1
+  ORDER BY 2 DESC
+  LIMIT 5
+),
+get_email AS (
+  SELECT email, address_id
+  FROM customer
+  JOIN get_top5_amount_id
+  ON customer.customer_id = get_top5_amount_id.id)
+
+SELECT get_email.email, address.address
+FROM get_email
+JOIN address
+ON get_email.address_id = address.address_id;
+
+WITH句の終了時にはセミコロン（；）不要であることに注意。
+
+
+・ウィンドウ関数について
+
+ウィンドウ関数は集約関数と似たような計算をするが、
+通常の集計関数と違い、単一出力行に行をグループ化しない。
+行はそれぞれ個別の身元を維持する。
+
+使い方としては、
+OVER (PARTITION BY ...)　または　OVER (ORDER BY ...)　をつける。
+OVERの前にウィンドウ関数を付けるか、集約関数を付ける。
+
+例：
+SELECT 
+  Start_Station_name, // 出発地点の名前
+  Duration,　// 利用時間
+  SUM(Duration)   OVER (PARTITION BY Start_station_name) AS running_total, // 合計利用時間
+  COUNT(Duration) OVER (PARTITION BY Start_station_name) AS running_count, // 合計利用回数
+  AVG(Duration)   OVER 'PARTITION BY Start_station_name) AS running_avg    // 利用時間の平均
+FROM 
+  trip_histories
+WHERE 
+  Start_time < '2016-01-30'
+;
+
+
+・RANK（）　OVER　の使い方
+
+RANK() OVER(ORDER BY 順位付けする列名）
+RANKは同順位に対して同じ番号をつける
+
+例：
+SELECT customer_id AS '顧客ID', amount AS '売上金額', RANK() OVER(ORDER BY amount DESC) AS 'ランキング' FROM `receipt`;
+
+
+・DENSE_RANK（）　OVER　の使い方
+
+RANKとは異なり順位付けした番号をスキップしない関数
+順位が　１、　２、　２、　ときたら　RANKは4位だが、　DENSE_RANKなら3位になる
+
+使い方はRANKと同じ
+
+
+・ROW_NUMBER（）　OVER　の使い方
+
+同率順位になっても同じ順位にはならない
+ORDER BY句に要素を加えることで操作することができる
+
+使い方はRANKと同じ
+
+
+・NTILE（）　OVER　の使い方
+
+全体の中のどこに位置しているかがわかる。
+4分率、5分率、100分率を指定することができ、
+例えば生徒の点数順にランクを付けて、上位20%の生徒を合格にするといった場合の判定ができる。
+4分率　➡　全体を4で割ったグループ分け　全体が100なら25ずつが1グループ
+5分率　➡　全体を5で割ったグループ分け　全体が100なら20ずつが1グループ
+100分率　➡　パーセントと同じ
+
+例：
+SELECT 
+  ROW_NUMBER() OVER (PARTITION BY Start_station_name ORDER BY Duration) AS row_num,
+  Start_station_name,
+  Duration,
+  NTILE(4) OVER (PARTITION BY Start_station_name ORDER BY Duration) AS quartile,
+  NTILE(5) OVER (PARTITION BY Start_station_name ORDER BY Duration) AS quintile,
+  NTILE(100) OVER (PARTITION BY Start_station_name ORDER BY Duration) AS percentile
+FROM
+  trip_histories
+WHERE
+  Start_time < '2016-01-30'
+  AND Start_station_name = "10th & E St NW"
+LIMIT 100;
+
++---------+--------------------+----------+----------+----------+------------+
+| row_num | Start_station_name | Duration | quartile | quintile | percentile |
++---------+--------------------+----------+----------+----------+------------+
+|       1 | 10th & E St NW     |    64653 |        1 |        1 |          1 |
+|       2 | 10th & E St NW     |    83260 |        1 |        1 |          1 |
+|       3 | 10th & E St NW     |   110038 |        1 |        1 |          1 |
+|       4 | 10th & E St NW     |   124887 |        1 |        1 |          1 |
+|       5 | 10th & E St NW     |   133040 |        1 |        1 |          1 |
+|       6 | 10th & E St NW     |   134227 |        1 |        1 |          2 |
+...
+|      95 | 10th & E St NW     |   441657 |        1 |        2 |         19 |
+|      96 | 10th & E St NW     |   443152 |        1 |        2 |         20 |
+|      97 | 10th & E St NW     |   443700 |        1 |        2 |         20 |
+|      98 | 10th & E St NW     |   445121 |        1 |        2 |         20 |
+|      99 | 10th & E St NW     |   445837 |        1 |        2 |         20 |
+|     100 | 10th & E St NW     |   447317 |        1 |        2 |         20 |★★★
++---------+--------------------+----------+----------+----------+------------+
+
+
+・LAG()　OVER　の使い方
+
+前の行の値を引き出すことができる。
+LAG（前の値を出したいカラム、　何行前かを表す数字）　OVER
+前の値がない場合はNULLを返す・
+
+例：
+SELECT
+  n,
+  LAG(n, 1, 0)      OVER w AS 'lag',
+  LEAD(n, 1, 0)     OVER w AS 'lead',
+  n + LAG(n, 1, 0)  OVER w AS 'next_n',
+  n + LEAD(n, 1, 0) OVER w AS 'next_next_n'
+FROM fib
+WINDOW w AS (ODER BY n);
+
++------+------+------+--------+-------------+
+| n    | lag  | lead | next_n | next_next_n |
++------+------+------+--------+-------------+
+|    1 |    0 |    1 |      1 |           2 |
+|    1 |    1 |    2 |      2 |           3 |
+|    2 |    1 |    3 |      3 |           5 |
+|    3 |    2 |    5 |      5 |           8 |
+|    5 |    3 |    8 |      8 |          13 |
+|    8 |    5 |    0 |     13 |           8 |
++------+------+------+--------+-------------+
+
+
+・LEAD()　OVER　の使い方
+
+次の行の値を引き出すことができる。
+
+
+・WINDOW句　の使い方
+
+WINDOW句は簡単に言うと、ウィンドウ関数の条件下のエイリアスである。
+
+例：
+SELECT 
+  ROW_NUMBER() OVER (PARTITION BY Start_station_name ORDER BY Duration) AS row_num,
+  Start_station_name,
+  Duration,
+  NTILE(4) OVER ntile_window AS quartile,
+  NTILE(5) OVER ntile_window AS quintile,
+  NTILE(100) OVER ntile_window AS percentile
+FROM
+  trip_histories
+WHERE
+  Start_time < '2016-01-30'
+  AND Start_station_name = "10th & E St NW"
+WINDOW ntile_window AS (PARTITION BY Start_station_name ORDER BY Duration)
+LIMIT 100;
+
+
