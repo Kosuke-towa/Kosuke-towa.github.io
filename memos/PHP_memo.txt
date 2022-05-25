@@ -1,0 +1,471 @@
+
+PHP メモ
+
+第一部　PHP　ドキュメント
+
+----------------------------------------------------------------------------------------------------------------------
+
+☆参照渡し
+
+通常関数呼び出し時に引数で値を渡されているときは「値渡し」。
+この時引数で指定された変数の値はコピーされて、別の変数として仮引数で値を受け取る。
+
+参照渡しでは、値をコピーせずに変数への参照を渡す。
+
+例：
+function sub1(&$ref, $val)
+{
+    $ref += 5;
+    $val += 10;
+    echo '$ref = ', $ref, PHP_EOL;
+    echo '$val = ', $val, PHP_EOL;
+}
+
+$a = 1;
+$b = 2;
+sub1($a, $b);
+echo '$a = ', $a, PHP_EOL;
+echo '$b = ', $b, PHP_EOL;
+
+出力結果：
+$ref = 6    # 関数の中で加算された結果
+$val = 12   # 関数の中で加算された結果
+$a = 6      # 関数の中で加算された結果が、呼び出し元の引数に反映する
+$b = 2      # 関数の中で加算された結果は、呼び出し元の引数に反映しない
+
+-----------------------------------------------------------
+
+☆可変長引数　...
+
+可変長引数とは、関数に対して複数の引数を渡すが、確定できない場合に使える。
+可変長引数は「...$val」とドット3個で表す。
+
+例：
+<?php
+   function concatenate(string ...$name): string
+   {
+      $concatenatedName = "";
+      for($i = 0; $i < count($name); $i++){
+         $concatenatedName .= $name[$i];
+         if($i != count($name) - 1){
+            $concatenatedName .= "・";
+         }
+      }
+      return $concatenatedName;
+   }
+
+   $lName = "斎藤";
+   $fName = "新三";
+   $name1 = concatenate($fName, $lName);
+   print("結合結果:" . $name1);
+   $picasso = concatenate("パブロ", "ディエゴ", "ホセ", "フランシスコ", "デ", "パウラ", "ファン", "ネポムセーノ", "マリア", "デ", 
+                           "ロス", "レメディオス", "シプリアノ", "デ", "ラ", "サンティシマ", "トリニダード", "ルイス", "ピカソ");
+   print("<br>ピカソの本名:" . $picasso);
+
+出力結果:
+結合結果: 新三・齊藤
+ピカソの本名: パブロ・ディエゴ・ホセ・フランシスコ・デ・パウラ・ファン・ネポムセーノ・マリア・デ・ロス・レメディオス・シプリアノ・デ・ラ・サンティシマ・トリニダード・ルイス・ピカソ
+
+関数外の例：
+<?php
+   function concatenate(string $firstName, string $lastName. string $space = ""): string
+   {
+      return $lastName . $space . $firstName;
+   }
+
+   $nameParam1 = ["新三", "斎藤", "・"];
+   $name1 = concatenate(...$nameParam1);
+   print("・で結合:" . $name1);
+   $nameParam2 = ["新三", "斎藤"];
+   $name2 = concatenate(...$nameParam2);
+   print("<br>空文字で結合:" . $name2);
+
+出力結果：
+・で結合: 齊藤・新三
+空文字で結合: 齊藤新三
+
+-----------------------------------------------------------
+
+☆可変関数
+
+可変関数とは、関数名を示す変数の後ろに「()」を付けて関数として扱うこと。
+
+例：
+<?php
+   function concatenateSpace(string $firstName, string $lastName): string
+   {
+      return $lastName . " " . $firstName;
+   }
+
+   function concatenateDot(string $firstName, string $lastName): string
+   {
+      return $lastName . "・" . $firstName;
+   } 
+
+   $lName = "斎藤";
+   $fName = "新三";
+   $funcNameList = ["concatenateSpace", "concatenateDot"];
+   foreach($funcNameList as $funcName){
+      $name = $funcName($fName, $lName);　// 取り出した関数名に()を付けることで関数として使用
+      print($funcName . "関数での結合結果:" . $name . "<br>");
+   }
+
+出力結果：
+concatenateSpace関数での結合結果: 齊藤 新三
+concatenateDot関数での結合結果: 齊藤・新三
+
+-----------------------------------------------------------
+
+☆コールバック関数
+
+コールバック関数とは関数を引数化すること。
+
+例：
+<?php
+   function concatenateSpace(string $firstName, string $lastName): string
+   {
+      return $lastName . " " . $firstName;
+   }
+
+   function useConcatenate(array $name, callable $func)
+   {
+      $concatName = $func(...#name);
+      print($func . "関数での結合結果:" . $concatName . "<br>");
+   }
+$nameParam = ["新三", "斎藤"];
+useConcatenate($nameParam, "concatenateSpace");
+
+出力結果：
+concatenateSpace関数での結合結果: 齊藤 新三
+
+コールバック関数によってコードを短縮化できる可能性がある。
+array_map()という関数は、第一引数にコールバック関数を渡すことで配列の各要素にその関数を適用する機能。
+例えば、ここにtrim()を渡す。
+
+例：
+<?php
+   $params = [" 斎藤 ", "　新三 ", " プログラマ　"];
+   print("<pre>");
+   var_dump($params);
+   print("</pre>");
+
+   $trimedParams = array_map("trim", $params);
+   print("<pre>");
+   var_dump($trimParams);
+   print("</pre>");
+
+出力結果：
+array(3) {
+  [0]=>
+  string(9) "  齊藤 "
+  [1]=>
+  string(9) "  新三 "
+  [2]=>
+  string(18) " プログラマ  "
+}
+array(3) {
+  [0]=>
+  string(6) "齊藤"
+  [1]=>
+  string(6) "新三"
+  [2]=>
+  string(15) "プログラマ"
+}
+
+-----------------------------------------------------------
+
+☆クロージャ（無名関数）
+
+クロージャとは、引数に関数の定義までが直接記述された関数のこと。
+
+例：
+<?php 
+   function useConcatenate(array $name, callable $func)
+   {
+      $concatName = $func(...$name);
+      print("無名関数での結合結果:" . $concatName . "<br>");
+   }
+
+   $nameParam = ["新三", "斎藤"];
+   useConcatenate($nameParam, function(string $firstName, string $lastName): string
+   {
+      return $lastName . " " . $firstName;
+   });
+
+出力結果：
+無名関数での結合結果:　斎藤　新三
+
+-----------------------------------------------------------
+
+☆マジックメソッド　（__func()）
+
+マジックメソッドとは、コンストラクタ（__construct()）のように特殊な状況で実行されるメソッドである。
+
+メソッド           引数          戻り値         実行される状況
+__construct()     任意           なし           インスタンスが生成されるとき
+__destruct()      なし           なし　　　　　　インスタンスが破棄されるとき 
+__call() 　       任意           任意           アクセス不能な非staticメソッドを実行しようとしたとき
+__callStatic()    任意           任意           アクセス不能なstaticメソッドを実行しようとしたとき
+__get()           プロパティ名    任意           アクセス不能なプロパティからデータを読み込もうとしたとき
+__set()           プロパティ名と  なし           アクセス不能なプロパティにデータを格納しようとしたとき
+                  値の2つ     
+__isset()         プロパティ名　　true/false     アクセス不能なプロパティに対してisset()、あるいはempty()を実行しようとしたとき
+__unset()         プロパティ名　  なし           アクセス不能なプロパティに対してunset()を実行しようとしたとき
+__sleep()         なし           配列  　       インスタンスに対してserialize()を実行したとき
+__wakeup()        なし           なし           インスタンスに対してunserialize()を実行したとき
+__toString()      なし           文字列         インスタンスを文字列に変換しなければならないとき
+__invoke()        任意           任意           インスタンスを関数のように実行しようとしたとき
+__set_state()     配列           インスタンス    インスタンスに対してvar_export()を実行しようとしたとき、このメソッドはstatic
+__clone()         なし           なし           cloneキーワードを使ってインスタンスのクローン生成を実行したとき
+__debugInfo()     なし           配列           インスタンスに対してvar_dump()を実行しようとしたとき
+
+
+-----------------------------------------------------------
+
+・__set() __get()
+
+アクセス不能なプロパティとは、privateプロパティかそもそも存在しないプロパティ。
+
+例：
+DynamicProperty.php
+<?php
+
+class DynamicProperty
+{
+   private $props = [];
+
+   public function __set($name, $value)
+   {
+      $this->props[$name] = $value;
+   }
+
+   public function __get($name)
+   {
+      if(isset($this->props[$name])){
+         return $this->props[$name];
+      }else{
+         return null;
+      }
+   }
+}
+
+<?php
+require_once("DynamicProperty.php");
+
+$dm = new DynamicProperty();
+$dm->name = "田中";　　// マジックメソッドのおかげでエラーとならず__set()メソッド内の処理が走る
+$dm->english = 88;
+$dm->math = 91;
+$dm->japanese = 85;
+
+$total = $dm->english + $dm->math + $dm->japanese;
+print($dm->name . "さんの3教科合計:" . $toal);
+print("<br>理科:" . $dm->science);
+
+出力結果：
+田中さんの3教科合計: 264
+理科:
+
+
+-----------------------------------------------------------
+
+・__invoke()
+
+__invoke()メソッドは、インスタンスを関数のように実行した場合に呼ばれるメソッド。
+
+例：
+InvokeSample.php
+<?php
+class InvokeSample
+{
+   public function __invoke(string $name): string
+   {
+      return $name . "さんこんにちは";
+   }
+}
+
+<?php
+require_once("InvokeSample.php");
+
+$is = new InvokeSample();
+$ans = $is("しんぞう");
+print($ans);
+
+
+・クロージャの代わりとしてインスタンスを使う
+
+array_walk()は第一引数に配列、第二引数にコールバック関数を渡すことで、配列の各要素にその関数を適用する。
+array_map()との違い
+array_map() ➡　関数を適用した新たな配列をリターンしてくれる
+array_walk() ➡　オリジナルの配列に関数を適用し、戻り値はない
+
+使い方として、第二引数にクロージャ（無名関数）を使ったり、
+array_walk($list, function(int$item): void
+{
+   :
+});
+
+関数を用意しておいたりして使う
+array_walk($list, "forWalk");
+
+そこで第二引数のコールバック関数にインスタンスを適用してみる
+例：
+InvokeController
+<?php 
+class InvokeController
+{
+   // コンストラクタで受け取った値を格納するプロパティ
+   private $num = 1;
+
+   // コンストラクタ　
+   public function __construct(int $num)
+   {
+      // 引数として受け取った値をプロパティに格納
+      $this->num = $num;
+   }
+
+   public function __invoke(int $item): void
+   {
+      $ans = $item * $this->num;
+      print($this->num . "倍した値:" . $ans . "<br>");
+   }
+}
+
+<?php 
+require_once("InvokeController.php");
+
+$ic = new InvokeController(6);
+
+$list = [1, 3, 5, 7, 9];
+array_walk($list, $ic);
+
+出力結果：
+6倍した値: 6
+6倍した値: 18
+6倍した値: 30
+6倍した値: 42
+6倍した値: 54
+
+クロージャではなく__invoke()を使うメリット
+
+・クラスとして再利用可能であること。（クロージャはその場限りの使い捨ての関数）
+・インスタンスであるため、インスタンス内の他のメンバを利用できる。
+　上記の例ではインスタンス化する際に別の値を渡すと、実行結果も変わる。クロージャや通常の関数ではできないこと。
+
+----------------------------------------------------------------------------------------------------------------------
+
+第二部　PHP　function
+
+----------------------------------------------------------------------------------------------------------------------
+
+・array_filter($array, $callback = null, $mode = 0)　の使い方
+
+第二引数に関数を含めることで
+配列に対してチェックや、選別を行うことができる。
+
+例：
+
+function odd($var){
+ 
+  return $var & 1;
+
+}
+
+function even($var){
+
+  return !($var & 1);
+
+}
+
+$array1 = ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5];
+$array2 = [6, 7, 8, 9, 10, 11, 12];
+
+echo "Odd : \n";
+print_r(array_filter($array1, "odd"));
+echo "Even: \n";
+print_r(array_filter($array2, "even"));
+
+出力結果:
+Odd :
+Array
+(
+   [a] => 1
+   [c] => 3
+   [e] => 5
+)
+Even:
+Array
+(
+   [0] => 6
+   [2] => 8
+   [4] => 10
+   [6] => 12
+)
+
+
+・array_intersect($array, $arrays...)　の使い方
+
+配列の共通項を計算し、他のすべての引数に存在するarrayの値をすべて有する配列を返す。
+第一引数　array : 値を調べる元となる配列
+第二引数　arrays: 値を比較する対象となる配列
+戻り値　　：　arrayの値の内、すべての引数に存在する値のモノを含む連想配列を返す。
+
+例：
+$array1 = array("a" => "green", "red", "blue");
+$array2 = array("b" => "green", "yellow", "red");
+$result = array_intersect(#array1, $array2);
+print_r($result);
+
+出力結果:
+Array
+(
+   [a] => green
+   [0] => red
+)
+
+
+・array_values($array) の使い方
+
+配列のすべての値を返す。
+第一引数　array　：　配列
+戻り値　　：　数値添字の値の配列を返す。
+
+例：
+$array = array("size" => "XL", "color" => "gold");
+print_r(array_values($array));
+
+出力結果:
+Array
+(
+   [0] => XL
+   [1] => gold
+)
+
+
+・filter_input($type, $var_name, $filter = FILTER_DEFAULT, $options = 0)　の使い方
+
+指定した名前の変数を外部から受け取り、オプションでそれをフィルタリングする。
+フィルタリングとは目的の値が正しいものか調査すること。
+第一引数　type     : INPUT_GET, INPUT_POST, INPUT_COOKIE, INPUT_SERVER, INPUT_ENV
+第二引数　var_name : 取得する変数の名前
+第三引数　filter   : 適用するフィルタのＩＤ
+　　　　　　　　　　 参照　https://www.php.net/manual/ja/filter.filters.php
+第四引数　options  : オプションあるいはフラグの論理和の連想配列
+		　　 オプションを指定可能なフィルタの場合、この配列のflagsフィールドにフラグを指定する  
+戻り値　　　　　　 : 成功時、要求された変数の値、失敗時、false、または変数var_nameが設定されていない場合にnullを返す
+　　　　　　　　　　 フラグFILTER_NULL_ON_FAILUREが指定されている場合は、変数が設定されていなければfalse、失敗したらnullを返す
+
+例：
+// POSTされたemailという変数がある状態で
+$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+var_dump($email);
+
+出力結果：
+// POST値が「test@test.com」
+string(13) "test@test.com"
+// POST値が「test」
+bool(false)
+
+
+
+
