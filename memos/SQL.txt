@@ -12,6 +12,26 @@ WHERE　～　
 -----------------------------------------------------------------------------
 ◎　
 
+・INSERT ～　SELECT　でDBからデータをコピーして新規作成ができる
+
+定義が同じテーブルで全件INSERTする場合
+INSERT INTO tab1
+SELECT *
+FROM tab2
+
+列を指定してINSERTする場合
+INSERT INTO tab1 (
+    col1,
+    col2
+    ・
+    ・
+    )
+SELECT col1, col2
+FROM tab2
+※　条件で絞り込む場合は追加
+(WHERE tab2.col4 = condition1
+ AND   tab2.col5 = condition2)
+
 ・SELECT文には　数字を表示することができる
 
 SELECT 10 AS age, COUNT(id) AS player_count FROM players 
