@@ -372,6 +372,27 @@ SELECT * FROM 'players' WHERE age BETWEEN 20［最小］ AND 50［最大］;
 否定形
 expire NOT BETWEEN min AND max ( NOT (expire BETWEEN min AND max))
 
+
+・COALESCE　の使い方
+
+IFNULL同様、NULLに第二引数をあてる
+
+リスト内での最初の非NULL値を返す。
+
+COALESCE（name, id, NULL) ➡　名前があれは名前、名前が無ければID、IDが無ければNULLを返す。
+
+例：
+SELECT shop.name,
+       COALESCE(
+           shop.building_name,
+           shop.area_name,
+           "地域情報なし"
+       ) AS spot
+FROM shop
+
+例でいけばspot列として店舗のビル名、ビル名がNULLならエリア名、エリア名もNULLなら”地域情報なし”の文字列を入れれる。
+
+
 ・IN　の使い方
 
 複数の条件での値を取得したい時に使う
@@ -424,6 +445,84 @@ SELECT * FROM 'players' WHERE name NOT LIKE '%ニョ';
 
 -----------------------------------------------------------------------------
 
+◎　フロー制御演算子
+
+・CASE　式の使い方
+
+単純CASE式
+value = compare_valueの場合,resultが返される。
+CASE value
+  WHEN compare_value THEN result
+  WHEN compare_value THEN result
+  ・
+  ・
+  ・
+  ELSE result
+END
+
+例：
+CASE gender(列名)
+  WHEN '男'(値） THEN 1（新しいデータ）
+  WHEN '女'(値） THEN 2（新しいデータ）
+  ELSE 99（新しいデータ）
+END
+
+検索CASE式
+true である最初の条件の結果が返される。一致する結果値がない場合はELSEの後のresultが返され。ELSE部分が無ければNULLが返される。
+CASE 
+  WHEN condition THEN result
+  WHEN condition THEN result
+  ・
+  ・
+  ・
+  ELSE result 
+END
+
+例：
+CASE
+  WHEN gender = '男' THEN 1
+  WHEN gender = '女' THEN 2
+  ELSE 99
+END
+
+ENDを忘れがち、気を付ける
+
+例：SELECT (CASE WHEN player_id IS NULL THEN '9999' ELSE player_id END )AS player, goal_time FROM `goals`;
+
+こんな使い方もできる
+男の数と女の数を同時に数えられる
+SELECT
+    SUM(CASE WHEN gender = 1 THEN 1 ELSE 0 END) AS male_count,
+    SUM(CASE WHEN gender = 2 THEN 1 ELSE 0 END) AS female_count
+FROM member
+
+
+・　IF　の使い方
+
+IF(expr, result1, result2）
+exprがtrue(expr <> 0 および expr <> NULL）の場合、IF()はresult1を返す。それ以外でresult2を返す。
+
+例：
+SELECT IF(1 > 2, 2, 3);
+　➡　3
+SELECT IF(1 < 2, 'yes', 'no');
+　➡　'yes'
+
+
+・IFNULL　の使い方
+
+IFNULL(expr1, expr2)
+expr1がNULLでない場合、IFNULL（）はexpr1を返し、それ以外ならexpr2を返す。
+
+例：
+SELECT IFNULL(1, 0);
+　➡　1
+SELECT IFNULL(NULL, 10);
+　➡　10
+SELECT IFNULL(player_id, '9999'), goal_time FROM `goals`;
+
+
+-----------------------------------------------------------------------------
 
 ・NOTの使い方
 
@@ -433,15 +532,6 @@ WHEREの後にNOTを付けることで検索条件の逆を検索できる
 
 SELECT * FROM `countries` WHERE NOT `group_name` = 'A'
 
-・POWER、POWの使い方
-
-POWERは「べき乗」を求める関数
-第一引数に基数、第二引数にべき乗の数
-つまり、第一引数を第二引数乗する
-
-例えば　POWER(3,2)　＝　9　　　3の2乗
-　　　　POW(4,5)　　＝　1024　　4の5乗
-
 
 ・DISTINCTの使い方
 
@@ -450,6 +540,10 @@ SELECTの後につけてDISTINCTの後にカラムを付ける
 
 SELECT DISTINCT position FROM `players`
 
+
+-----------------------------------------------------------------------------
+
+◎　文字列関数
 
 ・CONCATの使い方
 
@@ -472,9 +566,6 @@ CONCAT('文字列１',FORMAT(日付型のデータ, FORMAT[, culture]))
 
 複数連結することも可能　例
 SELECT CONCAT(name, "選手のポジションは\'" , position, "\'です") FROM `players` 
-
-
-
 
 
 ・SUBSTRING　の使い方
@@ -515,6 +606,84 @@ SELECT name, CHAR_LENGTH(name) AS len FROM `countries` ORDER BY len DESC;
 ギリシャ　96
 
 
+-----------------------------------------------------------------------------
+
+◎　数学関数
+
+・FLOOR　の使い方
+
+FLOOR(X)
+X以下で最大の整数値を返す。
+それと算術を合わせることで複雑な値を返すことができる
+
+例：
+SELECT FLOOR(TIMESTAMPDIFF(YEAR, birth, '2014-06-13') / 5) * 5   AS age, COUNT(id) AS player_count
+FROM players GROUP BY age;
+
+年齢を5で割った後の最大の整数を5倍することで5歳ごとに年齢を区切ることが可能。
+19歳　➡　3.8　➡　3　➡　15
+
+
+・TRUNCATE　の使い方
+
+TRUNCATE(X, D)　
+D小数点に切り捨てて、数字Xを返す。Dが0の場合は結果に小数点または小数部が含まれない。
+Dを負の数に指定すると、値Xの小数点左側のD桁をゼロにする。
+例：
+SELECT TRUNCATE(TIMESTAMPDIFF(YEAR, birth, '2014-06-13'), -1) AS age, COUNT(id) AS player_count
+FROM players GROUP BY age
+
+10代、20代、30代、40代と出すことができる。
+
+
+・LN　の使い方
+
+LN(X)
+Xの自然対数（つまり、Xの底eの対数）を返す。Xが0以下の場合はNULLを返す。
+
+例：
+SELECT LN(2)
+　➡　0.69314718055995
+
+・LOG　の使い方
+
+LOG(X)
+パラメータが1個の場合はXの自然対数を返す。　これはLN()と同等でLNのシノニム（同義語）である。
+
+LOG(B, X)
+パラメータが2つの場合は、Bを底とするXの対数が返される。
+
+例：
+SELECT LOG(2, 65536);
+　➡　16
+SELECT LOG(10, 100);
+　➡　2
+ 
+LOG2(X)
+Xの底2の対数を返す。
+
+LOG10(X)
+Xの底10の対数、つまり常用対数を返す。
+
+例：
+SELECT LOG10(100)
+　➡　2
+
+
+・POWER、POWの使い方
+
+POWERは「べき乗」を求める関数
+第一引数に基数、第二引数にべき乗の数
+つまり、第一引数を第二引数乗する
+
+例えば　POWER(3,2)　＝　9　　　3の2乗
+　　　　POW(4,5)　　＝　1024　　4の5乗
+
+
+-----------------------------------------------------------------------------
+
+◎　日付　および　時間関数
+
 ・DATE_FORMAT　の使い方
 
 日付型からの変換に使う。
@@ -554,86 +723,6 @@ SELECT sales_ymd, FROM_UNIXTIME(sales_epoch), receipt_no, receipt_sub_no FROM `r
 SELECT sales_ymd, FROM_UNIXTIME(sales_epoch, '%m'//月だけ抽出), receipt_no, receipt_sub_no FROM `receipt` LIMIT 10;
 
 
-・IFNULL　の使い方
-
-対象の列にNULLがあれば置換する
-SELECT IFNULL(player_id, '9999'), goal_time FROM `goals`;
-
-
-・COALESCE　の使い方
-
-IFNULL同様、NULLに第二引数をあてる
-
-リスト内での最初の非NULL値を返す。
-
-COALESCE（name, id, NULL) ➡　名前があれは名前、名前が無ければID、IDが無ければNULLを返す。
-
-例：
-SELECT shop.name,
-       COALESCE(
-           shop.building_name,
-           shop.area_name,
-           "地域情報なし"
-       ) AS spot
-FROM shop
-
-例でいけばspot列として店舗のビル名、ビル名がNULLならエリア名、エリア名もNULLなら”地域情報なし”の文字列を入れれる。
-
-
-・CASE　式の使い方
-
-単純CASE式
-
-CASE gender(列名)
-  WHEN '男'(値） THEN 1（新しいデータ）
-  WHEN '女'(値） THEN 2（新しいデータ）
-  ELSE 99（新しいデータ）
-END
-
-検索CASE式
-
-CASE
-  WHEN gender = '男' THEN 1
-  WHEN gender = '女' THEN 2
-  ELSE 99
-END
-
-ENDを忘れがち、気を付ける
-
-例：SELECT (CASE WHEN player_id IS NULL THEN '9999' ELSE player_id END )AS player, goal_time FROM `goals`;
-
-こんな使い方もできる
-男の数と女の数を同時に数えられる
-SELECT
-    SUM(CASE WHEN gender = 1 THEN 1 ELSE 0 END) AS male_count,
-    SUM(CASE WHEN gender = 2 THEN 1 ELSE 0 END) AS female_count
-FROM member
-
-
-・AVG,MAX,MIN　の使い方
-
-SUMとかと一緒
-平均がでる
-GROUP BY　句と一緒に使いがち、しっかり覚える
-
-
-・COUNT　の使い方
-
-グループ関数という。
-グループ関数を使うと、指定したグループ単位にデータをまとめて表示することができる。
-
-例：
-SELECT COUNT(*) AS '日本のゴール数'　FROM goals　WHERE 714 <= player_id AND player_id <= 736
-
-COUNT(1)で全件カウントする。
-ちなみにCOUNT（○○）の列名の値がNULLだった場合はカウントできない。
-
-重複をカウントしない場合は、
-例：
-SELECT COUNT(DISTINCT customer_id) FROM receipt;
-のようにカラム名の前にDISTINCTを置く。
-
-
 ・TIMESTAMPDIFF　の使い方
 
 指定した単位で、2つの日付の差を返す。
@@ -666,72 +755,32 @@ SELECT p.kickoff, CONVERT_TZ(p.kickoff, '+00:00', '-12:00') AS kickoff_jp
 すべて同じ結果を返す。
 
 
-・TRUNCATE　の使い方
+-----------------------------------------------------------------------------
 
-TRUNCATE(X, D)　
-D小数点に切り捨てて、数字Xを返す。Dが0の場合は結果に小数点または小数部が含まれない。
-Dを負の数に指定すると、値Xの小数点左側のD桁をゼロにする。
-例：
-SELECT TRUNCATE(TIMESTAMPDIFF(YEAR, birth, '2014-06-13'), -1) AS age, COUNT(id) AS player_count
-FROM players GROUP BY age
+◎　集約関数　（GROUP BY関数）
 
-10代、20代、30代、40代と出すことができる。
+・AVG,MAX,MIN　の使い方
+
+SUMとかと一緒
+平均がでる
+GROUP BY　句と一緒に使いがち、しっかり覚える
 
 
-・FLOOR　の使い方
+・COUNT　の使い方
 
-FLOOR(X)
-X以下で最大の整数値を返す。
-それと算術を合わせることで複雑な値を返すことができる
+グループ関数という。
+グループ関数を使うと、指定したグループ単位にデータをまとめて表示することができる。
 
 例：
-SELECT FLOOR(TIMESTAMPDIFF(YEAR, birth, '2014-06-13') / 5) * 5   AS age, COUNT(id) AS player_count
-FROM players GROUP BY age;
+SELECT COUNT(*) AS '日本のゴール数'　FROM goals　WHERE 714 <= player_id AND player_id <= 736
 
-年齢を5で割った後の最大の整数を5倍することで5歳ごとに年齢を区切ることが可能。
-19歳　➡　3.8　➡　3　➡　15
+COUNT(1)で全件カウントする。
+ちなみにCOUNT（○○）の列名の値がNULLだった場合はカウントできない。
 
-
-・ド・モルガンの法則
-
-A、Bの集合に対して
-「AかつBではない」　＝　「Aではない、またはBではない」
-「AまたはBではなく」　＝　「Aではない、かつBではない」
-
-
-・REGEXP　の使い方
-
-正規表現を使ったパターンマッチングを行うことができる
-
+重複をカウントしない場合は、
 例：
-SELECT * FROM `customer` WHERE status_cd REGEXP '^[A-F]' LIMIT 10;
-
-特殊記号  .は文字
-.　　　　➡　任意の1文字に一致
-[...]　　➡　カッコ内のいずれかの文字に一致
-　　　　　　[abc]　　a,b,cのいずれかに一致
-            [a-z]　　aからzのいずれかに一致
-            [^a-z]　 aからz以外に一致
-*　　　　➡　直前の文字の0回以上の繰り返し（なくてもよい）に一致
-+　　　　➡　直前の文字の1回以上の繰り返しに一致
-?　　　　➡　直前の文字があっても無くても一致
-..|..|.. ➡　複数の文字からなる文字列を指定できる
-^..  　　➡　先頭の文字に一致
-..$　　　➡　末尾の文字に一致
-(abc)　　➡　複数の文字を指定できる
-{n, m}　 ➡　nは最小回数、mは最大回数
-　　　　　　 {n}     直前のパターンのn回連続に一致
-             {n,}    直前のパターンのn回以上連続に一致
-             {,m}    直前のパターンのm回以下連続に一致
-             {n,m}   直前のパターンのn回以上、m回以下の連続に一致
-
-
-・BINARY　の使い方
-
-正規表現の大文字、小文字を区別することができる
-
-例：
-SELECT * FROM `customer` WHERE status_cd REGEXP BINARY '^[A-F]' LIMIT 10;
+SELECT COUNT(DISTINCT customer_id) FROM receipt;
+のようにカラム名の前にDISTINCTを置く。
 
 
 ・中央値、最頻値
@@ -782,6 +831,25 @@ GROUP BY store_cd
 ORDER BY '標準偏差' DESC
 LIMIT 5;
 
+
+・ド・モルガンの法則
+
+A、Bの集合に対して
+「AかつBではない」　＝　「Aではない、またはBではない」
+「AまたはBではなく」　＝　「Aではない、かつBではない」
+
+
+
+-----------------------------------------------------------------------------
+
+◎　キャスト関数
+
+・BINARY　の使い方
+
+正規表現の大文字、小文字を区別することができる
+
+例：
+SELECT * FROM `customer` WHERE status_cd REGEXP BINARY '^[A-F]' LIMIT 10;
 
 
 -----------------------------------------------------------------------------
