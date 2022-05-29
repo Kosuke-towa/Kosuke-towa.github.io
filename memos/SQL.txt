@@ -613,7 +613,7 @@ SELECT name, CHAR_LENGTH(name) AS len FROM `countries` ORDER BY len DESC;
 ・FLOOR　の使い方
 
 FLOOR(X)
-X以下で最大の整数値を返す。
+X以下で最大の整数値を返す。 ➡　切り捨て
 それと算術を合わせることで複雑な値を返すことができる
 
 例：
@@ -635,6 +635,35 @@ FROM players GROUP BY age
 
 10代、20代、30代、40代と出すことができる。
 
+
+・CEILING　の使い方
+
+CEILING(X)　または　CEIL(X)
+X以上で最小の整数値を返す。　➡　切り上げ
+例：
+SELECT CEILING(1.23);
+　➡　2
+ 
+ 
+ ・ROUND　の使い方
+ 
+ ROUND(X)
+ 引数Xの四捨五入をした値をケ返す。
+ 例：
+ SELECT ROUND(-1.23);
+ 　➡　-1
+ SELECT ROUND(-1.58);
+ 　➡　-2
+  
+ ROUND(X,D)
+ 引数XをD小数点に丸める。
+ Dが負の数であれば、値Xの小数点左側のD桁をゼロにする。
+ 例：
+ SELECT ROUND(1.298, 1);
+ 　➡　1.3
+ SELECT ROUND(23.298, -1);
+ 　➡　20
+  
 
 ・LN　の使い方
 
