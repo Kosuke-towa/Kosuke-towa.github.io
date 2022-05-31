@@ -67,57 +67,6 @@ UNIONで繋げたいSELECT句の列数は上下で一緒にする必要がある
 UNION句の後にALLを加えることで重複したデータを取得できる（2件以上重複する）
 
 
-・INNER　JOIN　の使い方
-
-SELECT *
-FROM　結合されるテーブル名　別名１
-INNER JOIN（JOINのみでもOK）　結合するテーブル名　別名２
-ON　別名１．Column1　=　別名２．Column2
-
-NULLは省略される
-
-
-・LEFT JOIN　の使い方
-
-INNER JOINとほぼ一緒だが、
-メイン側のテーブルで結合するカラムが存在している場合は
-結合する側のテーブルデータがNULLでも表示される
-
-
-・自己結合　の使い方
-
-基本的には普通のJOINと同じだが、
-同じテーブル結合を行うことができる。
-同じ結合の場合は別名を付けておく必要があるため注意。
-
-考え方としては、同じテーブル内でデータを組み替えて見やすくするときなどに使う。
-
-例
-SELECT p.kickoff, mc.name AS my_country, ec.name AS enemy_country
-FROM pairings p
-JOIN countries mc ON mc.id = p.my_country_id
-JOIN countries ec on ec.id = p.enemy_country_id
-
-
-・CROSS　JOIN　の使い方
-
-CROSS JOIN　は2つのテーブルのデータを全て組み合わせたデータ。
-
-例：
-SELECT COUNT(1)
-FROM store
-CROSS JOIN product
-;
-
-
-・ON句の条件について
-
-テーブル結合の条件として、
-WHERE句で絞る場合と、ON句で絞る場合で結果が異なる場合がある。
-結果が異なるのは、外部結合のみであり、
-JOIN ON句で絞り込み条件を書くと、「結果を絞るのではなく、結合前のテーブルのレコードを絞ることになる。」
-
-
 ・GROUP　BY　句　の使い方
 
 取得したいデータをグループ化したい場合につかう。
@@ -162,7 +111,91 @@ SELECT * FROM customer WHERE RAND() <= 0.01 ;
 
 -----------------------------------------------------------------------------
 
-◎副問合せ
+◎　結合
+
+・INNER　JOIN　の使い方
+
+SELECT *
+FROM　結合されるテーブル名　別名１
+INNER JOIN（JOINのみでもOK）　結合するテーブル名　別名２
+ON　別名１．Column1　=　別名２．Column2
+
+NULLは省略される
+
+
+・LEFT JOIN　の使い方
+
+INNER JOINとほぼ一緒だが、
+メイン側のテーブルで結合するカラムが存在している場合は
+結合する側のテーブルデータがNULLでも表示される
+
+
+・自己結合　の使い方
+
+基本的には普通のJOINと同じだが、
+同じテーブル結合を行うことができる。
+同じ結合の場合は別名を付けておく必要があるため注意。
+
+考え方としては、同じテーブル内でデータを組み替えて見やすくするときなどに使う。
+
+例
+SELECT p.kickoff, mc.name AS my_country, ec.name AS enemy_country
+FROM pairings p
+JOIN countries mc ON mc.id = p.my_country_id
+JOIN countries ec on ec.id = p.enemy_country_id
+
+
+・CROSS　JOIN　の使い方
+
+CROSS JOIN　は2つのテーブルのデータを全て組み合わせたデータ。
+
+例：
+SELECT COUNT(1)
+FROM store
+CROSS JOIN product
+;
+
+
+・配列を単一の列のレコードに展開する
+
+split関数
+split（文字列, 区切り文字）
+第一引数の文字列を第二引数の区切り文字で分割し、配列にする
+
+cross join unnest関数
+CROSS JOIN UNNEST(配列） AS t (展開後のカラム名）
+第一引数の配列を単一の列のレコードに展開する
+カラム名は第二引数の展開後のカラム名になる
+
+例：
+SELECT 
+    split_record
+FROM
+    tbl_test t1
+CROSS JOIN UNNEST(split(t1.csv_column, ',')) AS t (split_records);
+
+イメージ
+1．カンマ区切りの文字列レコード
+　　xxx1, xxx2, xxx3, xxx4
+2．文字列を配列に変換
+　| xxx1 | xxx2 | xxx3 | xxx4 |
+3．配列をレコードに展開
+　 xxx1
+   xxx2
+   xxx3
+   xxx4
+
+
+・ON句の条件について
+
+テーブル結合の条件として、
+WHERE句で絞る場合と、ON句で絞る場合で結果が異なる場合がある。
+結果が異なるのは、外部結合のみであり、
+JOIN ON句で絞り込み条件を書くと、「結果を絞るのではなく、結合前のテーブルのレコードを絞ることになる。」
+
+-----------------------------------------------------------------------------
+
+◎　副問合せ
 
 ・副問合せ　の使い方
 
