@@ -129,6 +129,44 @@
 　10．script要素のXSS
  　　　入力中に「</script>」が含まれている場合、そこでJavaScriptのソースの終端となり、
     　　再度「<script>alert(document.cookie)//」などと入れることでXSS攻撃が可能である。
+      
+  11．JavaScriptの動的パラメータ生成時の対策
+  　　1．Unicodeエスケープによる対策
+    　　英数字以外をすべてエスケープする手法で、UnicodeコードポイントU+XXXXの文字を\uXXXXという形でエスケープする機能を利用する。
+      　Unicodeエスケープする関数escape_js_stringは文字エンコーディングがUTF-8であることが前提だが、
+        英数字に加えてマイナス記号「-」とピリオド「.」をエスケープしない仕様になっている。
+        実装例：
+        <?php 
+         // 文字列を全て\uXXXX形式に変換する
+         function unicode_escape($matches){
+            $u16 = mb_convert_encoding($matches[0], 'UTF-16');
+            return preg_replace('/[0-9a-f]{4}/', '\u$0', bin2hex($u16));
+         }
+         // 英数字とマイナス、ピリオド以外を\uXXXX形式でエスケープする
+         function escape_js_string($s){
+            return preg_replace_callback('/[^-\.0-9a-zA-Z]+/u', 'unicode_escape', $s);
+         }
+         ?>
+         
+         スクリプトの説明
+         ・unicode_escape関数は入力文字列をすべて\uXXXXというUNICODE形式でエスケープする
+         ・mb_convert_encodingで入力をUTF-16でエンコーディングする
+         ・bin2hexで16進数文字列に変換する
+         ・正規表現により4バイト毎に「\u」を挿入する
+         ・escape_js_string関数は入力文字列の中から、英数字以外を\uXXXX形式でエスケープする
+         ・preg_replace_callback関数により英数字以外からなる文字列をunicode_escape関数に引き渡す
+         
+      2．script要素の外部でパラメータを定義して、JavaScriptから参照する方法
+      　　hiddenパラメータを利用する。
+        　実装例：
+          <input type="hidden" id="familyname" value="<?php echo htmlspecialchars($familyname, ENT_COMPACT, 'UTF-8'); ?>">
+          ...
+          <script type="text/javascript">
+          var familyname = document.getElementById('familyname').value;
+          //..
+          
+          2行目で値を設定する際に属性値に対するエスケープ原則に従い、htmlspecialchars関数でエスケープした値をダブルクォートで囲んでいる。
+          そのinputの値をgetElementByIdメソッドにより参照している。
 
 ◎　CSRF（クロスサイトリクエストフォージュリ）
 
