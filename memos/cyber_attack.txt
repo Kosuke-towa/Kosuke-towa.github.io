@@ -238,6 +238,81 @@
 　　　　バインドにあたりリテラルは適切に構成されるため、処理系にバグが無ければSQLインジェクションは発生しない。
     
     どちらかといえば静的プレースホルダが優れているため、そちらを使うべき。
+    
+ ・検索条件が動的に変わる場合のプレースホルダ対策
+ // 基本となるSQL
+ $sql = 'SELECT id, title, author, publisher, date, price FROM books';
+ if($title !== ''){  // 検索titleの追加（LIKE)
+     $conditions[] = "title LIKE ? ESCAPE '#'";
+     $ph_type[]    = 'text';
+     $ph_value[]   = escape_wildcard($title);
+ }
+ if($price !== ''){  // 検索条件priceの追加（大小比較）
+     $conditions[] = "price <= ?";
+     $ph_type[]    = 'integer';
+     $ph_value[]   = $price;
+ }
+ if(count($conditions) > 0){  // WHERE句がある場合
+     $sql .= ' WHERE ' . implode(' AND ', $conditions);
+ }
+ $smt = $mdb2 -> prepare($sql, $ph_type);  // SQL文の準備
+ $rs  = $stmt -> execute($ph_value);  // バインド・問い合わせ実行
+ 
+
+・ ORDER BY 句
+　ORDER　BY 句の後もセミコロンで第二SQLを実行できる。
+  対策として　ソート列名の妥当性確認を行う方法がある。
+  例：
+  $sort_columns = array('id', 'author', 'title', 'price');
+  $sort_key = $_GET['sort'];
+  if(array_search($sort_key, $sort_columns) !== false){
+     $sql .= ' ORDER BY ' . $sort_key;
+  }
+  
+  
+・保険的対策
+　1．詳細なエラーメッセージの抑止
+  2．入力値の妥当性検証
+  3．データベースの権限設定
+  
+
+    
+・参考
+　a.ワイルドカードのエスケープ
+ 　%などのワイルドカードを検索したい文字列として加えるにはエスケープする必要がある。
+ 　例：「#」を用いてエスケープする
+  　WHERE name LIKE '%#%%' ESCAPE '#'
+   「#%」で%を意味する
+   関数例：
+   function escape_wildcard($s){
+        return mb_ereg_replace('([_%#])', '#\1', $s);
+   }
+   
+   mb_ereg_replace()
+   第一引数に変換するターゲットの正規表現パターン
+   第二引数に変換後の文字列
+   第三引数に対象文字列
+   第四引数にオプション
+        　i …大文字・小文字が 区別されなくなる
+　        x …空白を無視
+　        m …マルチラインモード。改行も 正規表現"." に含まれる。
+　        p …POSIX モード。改行も通常文字とみなされる
+　        e …文字列引数 $replacement がPHPの式として評価される
+         
+
+  b.PHP+PDO+MySQLの安全な接続方法
+  　PDOはデータベース接続時に文字コードを指定する方法が用意されていないため、
+    MySQLの設定ファイル名を指定する方法で文字コードを指定する。
+    例：
+    $dbh = new PDO('mysql:host=localhost;dbname=wasbook', 'username', 'password', 
+                    array(
+                        PDO::MYSQL_ATTR_READ_DEFAULT_FILE => '/etc/mysql/my.cnf',
+                        PDO::MYSQL_ATTR_READ_DEFAULT_GROUP => 'client',
+                        PDO::ATTR_EMULATE_PREPARES => false,
+                    ));
+     更に/etc/mysql/my.cnf（MySQLの設定ファイル）に次の設定を追加する。
+      [client]
+      default-character-set=utf8
 
 
 
