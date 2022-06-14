@@ -1,0 +1,21 @@
+
+IEで％がきかない場合はこれ
+html {
+  font-size: calc(0.875em + 0.25 * (100vw - 80em) / 40);
+  font-size: -webkit-calc(87.5% + 0.25 * (100vw - 8000%) / 40);
+}
+
+最適な解
+html {
+  font-size: 100%;
+
+  // Scales by 1px for every 100px from 600px onwards
+  @media (min-width: 600px) {
+    font-size: calc(112.5% + 4 * (100vw - 600px) / 400)
+  }
+
+  // Sets font-size to 22px after a viewport of 1000px
+  @media (min-width: 1000px) {
+    font-size: calc(137.5%)
+  }
+}
