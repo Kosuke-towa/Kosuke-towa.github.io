@@ -1,0 +1,278 @@
+
+
+C# について
+
+-------------------------------------------------------------
+
+わからない用語
+
+・ジェネリック
+　型をパラメータに持つ型を作ることができる。
+  実装例：
+　public class Stack<T>{
+      T[] items;
+      int count;
+      public void Push(T item){...}
+      public T Pop(){...}
+  }
+  コンパイル時に型のチェックが可能、ボクシング・ダウンキャストが不要といった利点がある。
+  クラス、構造体、インターフェース、デリゲート、メソッドに対して適用可能。
+
+・匿名メソッド
+　インライン（コード中に直に）メソッドを記述できる機能。
+  イベントハンドラを定義するときに以下のように1度メソッドを定義してからデリゲートにそのメソッドを渡していた手間がなくなる。
+  従来のコード：
+  class InputForm: Form{
+    ...
+    public InputForm(){
+        addButton.Click += new EventHandler(AddClick);
+    }
+    
+    void AddClick(object sender, EventArgs e){
+        listBox.Items.Add(textBox.Text);
+    }
+  }
+  匿名メソッドを使ったコード：
+  class InputForm: Form{
+    ...
+    public InputForm(){
+        ...
+        addButton.Click += delegate{
+          listBox.Items.Add(textBox.Text);
+        };
+        // デリゲートの型は自動的に判別される
+        // 引数付きの匿名デリゲートも定義できる
+        // addButton.Click += delegate(object sender, EventArgs e)
+    }
+  }
+
+
+・ラムダ式
+　開放型言語でよく使うような記法で匿名メソッドを定義できる。
+  Func<int, bool>p = n => n > 0;
+    ⇓　// 以下のような匿名メソッドと同じ意味
+  delegate(int n){
+    return n > 0;
+  }
+  
+  また、ラムダ式は式木データとしても利用可能。
+  デリゲートに代入すると匿名メソッド（実行コード）として、Expression型に代入すると式木データとしてコンパイルされる。
+  Expression<Func<int, bool>> e = n => n > 0;
+  BinaryExpression lt = (BinaryExpression)e.Body;
+  ParameterExpression en = (ParameterExpression)lt.Left;
+  ConstantExpression zero = (ConstantExpression)lt.Right;
+  
+
+・デリゲート
+
+・デリゲートのCovariance/Contravariance
+　Convariance　➡　戻り値の型がデリゲートの戻り値の型の派生クラスになっていてもOK（共変性）
+　Contravariance　➡　引数の型がデリゲートの引数の型の基底クラスになっていてもOK（反変性）
+
+・イテレータ
+　イテレータ構文はコレクションクラスから要素を得るための構文である。
+　イテレータ構文例：
+  using System.Collections.Generic:
+  public class Stack<T>: IEnumerable<T>{
+    T[] items;
+    int count;
+    public void Push(T data){...}
+    public T Pop(){...}
+    public IEnumerator<T> GetEnumerator(){
+      for(int i = count - 1; i >= 0; --i){
+        yield return items[i];  // yieldというキーワードを用いて値を返すことで、自動的にIEnumeratorインターフェース実装するクラスを生成
+      }
+    }
+    
+  IEnumerableを返すメソッド/プロパティとしても定義する例：
+  public IEnumerable<T> BottomToTop{
+    get{
+      for(int i = 0; i < count; i++)
+        yied return items[i];
+    }
+  }
+
+  利用する側の例：
+  Stack<int> stack = new Stack<int>;
+  for(int i = 0; i < 10; i++) stack.Push(i);
+  foreach(int i in stack) Console.Write("{0}", i);
+  Console.WriteLine();
+  foreach(int i in stack.BottomToTop) Console.Write("{0}", i);
+  Console.WriteLine();
+  
+
+・パーシャルタイプ
+　クラスや構造体などの型を複数のソースファイルに分けて記述できる。
+  public partial class Customer{ ...
+  
+  
+・Nullable型
+　値型の型名の後ろに？をつけることで、元の型の値、またはnullの値を取れる型になる。
+  int? x = 123;
+  int? y = null;
+  
+  
+・??演算子
+　値がnullかどうかを判別し、nullの場合には別の値を割り当てる演算子。
+  // x, y はint?型の変数
+  int? z = x ?? y;  // x != null ? x : y           x=null => y
+  int i = z ?? -1;  // z != null ? z.value : -1　　z=null => -1
+
+
+・#pragma
+　pragmaプリプロセッサ命令
+  pragma ➡　コンパイラに特別な指示を与えることができる。
+  プリプロセッサ　➡　コンパイラの前処理を行うプログラムのこと。
+  pragmaの実装例：（Warningメッセージの抑止）
+  using System;
+  class Program{
+    [Obsolete]
+    static void Foo(){}
+    static void Main(){
+      // 612番の警告（Obsoleteメソッドを使用）を出さないようにする
+      #pragma warning disable 612
+        Foo();
+      // 612番の警告を出すように戻す
+      #pragma warning restore 612
+    }
+  }
+  
+
+・Conditional属性
+　属性クラスに対してConditional属性を付けることで、一定条件下でのみ適用される属性を作成できる。
+  実装例：
+  #define DEBUG
+  using System;
+  using System.Diagnostics;
+  
+  [Conditional("DEBUG")] // 属性クラスに対してConditional属性を付ける
+  public class TestAttribute : Attribute {}
+  
+  [Test]  // DEBUGシンボルが定義されているときのみTest属性がつく
+  class C {}
+
+
+・LINQ（Language Integrated Query）
+　リレーショナルデータベースやXMLに対する操作をプログラミング言語に統合するもの。
+　（データベースやXML操作用のライブラリとプログラミング言語中にSQL風の問い合わせ構文を埋め込めるようにする言語拡張）
+  LINQの導入利点
+  1．オブジェクト指向言語らしい書き方でデータベースへの問い合わせができる。
+  2．in-memoryなオブジェクト、XML、リレーショナルデータベースに対して、同じ文法でデータの問い合わせができる。
+  3．問い合わせ時にコンパイラによる文法チェックや、IntelliSenseのようなツールの補助を受けられる。
+  
+  書き方の例：
+  var 学生名簿 = new[]{
+                  new {学生番号 = 14, 姓 = "風浦", 名 = "可符香"},
+                  new {学生番号 = 20, 姓 = "小森", 名 = "霧"    },
+                  new {学生番号 = 22, 姓 = "常月", 名 = "まとい"},
+                  new {学生番号 = 19, 姓 = "小節", 名 = "あびる"},
+                  new {学生番号 = 18, 姓 = "木村", 名 = "カエレ"},
+                  new {学生番号 = 16, 姓 = "音無", 名 = "芽留"  },
+                  new {学生番号 = 17, 姓 = "木津", 名 = "千里"  },
+                  new {学生番号 =  8, 姓 = "関内", 名 = "マリア"},
+                  new {学生番号 = 28, 姓 = "日塔", 名 = "奈美"  },
+                };
+                
+  var 学籍番号前半名 = from p in 学生名簿
+                      where p.学生番号 <= 15
+                      order by p.学生番号
+                      select p.名;
+  foreach(var 名 in 学籍番号前半名){
+      Console.Write("{0}\n", 名);  // 実行結果：マリア\n 可符香\n
+  }
+  
+　・自動プロパティ  
+  　public string Name { get; set; }
+     ⇓　// 以下のような匿名メソッドと同じ意味
+    private string __name;
+    public string Name{
+      get{ return this.__name; }
+      set{ this.__name = value; }
+      
+   ・パーシャルメソッド
+   　パーシャルクラス限定でメソッドにpartialを付けることでメソッドの宣言と定義を分けられる。（privateメソッド限定、戻り値もvoid以外不可。）
+     実装例：
+     partial class Program{
+        static void Main(string[] args){
+            OnBeginProgram();
+            Console.Write("program body\n");
+            OnEndProgram();
+        }
+        
+        static partial void OnBeginProgram();
+        static partial void OnEndProgram();
+     }
+     // このままコンパイル⇒実行すると「program body」の文字だけ表示される。
+     // これに部分定義を追加してパーシャルメソッドに実装を与える。
+     partial class Program{
+        static partial void OnBeginProgram(){
+            Console.Write("check pre-condition\n");
+        }
+        static partial void OnEndProgram(){
+            Console.Write("check post-condition\n");
+        }
+     }
+     
+     利用場面としては宣言側は人、定義側をツールで自動生成という想定のよう。
+     あまり好ましくない。
+     
+     
+    
+    
+ 
+ 　・暗黙的型付け
+  　 varキーワードを用いて、暗黙的に型付けされたローカル変数を定義できる。
+     var n = 1;
+     var x = 1.0;
+     var s = "test";
+     
+   ・拡張メソッド
+   　クラスやインターフェースに対してインスタンスメソッドを擬似的に追加できる。
+     実装例：
+     static class StringExtensions{
+        public static string ToggleCase(this string s){
+           ...
+        }
+     }
+     // このメソッドは通常通り静的メソッドとして呼び出すことができるが、string型のインスタンスメソッドであるかのように呼び出せる
+     string s = "This is a Test string.";
+     string s1 = DtringExtensions.ToggleCase(s);  //  通常の呼び出し
+     string s1 = s.ToggleCase();  //  拡張メソッド呼び出し
+     
+  ・初期化子
+　　オブジェクトの初期化を以下の記法でできる。
+  　記法の実装例：
+  　Point p = new Point{ X = 0, Y = 1 };
+    　⇓　// 以下のような匿名メソッドと同じ意味
+  　Point p = new Point();
+  　p.X = 0;
+  　p.Y = 1;
+  
+　  コレクションの初期化の実装例：
+  　List<int> list = new List<int> {1, 2, 3};
+    　⇓　// 以下のような匿名メソッドと同じ意味
+  　List<int> list = new List<int>();
+  　list.Add(1);
+  　list.Add(2);
+  　list.Add(3);
+
+　・匿名型
+　　匿名型（anonymous type）を作成できる・
+  　var x = new { FamilyName = "糸色", FirstName="望"};
+  
+　・暗黙型付け配列
+　　newで配列を作成する際、型を省略できる。
+  　int[] array = new[]{1, 2, 3, 4};
+  
+  
+
+・プロパティとフィールド
+・値型と参照型
+・アセンブリ
+
+◎　C#
+
+・C++の性能と、Visual Basicの生産性を兼ね備えた言語が目標
+・Java、Delphi、Visual Basic、C++などから影響を受けた言語
+・staticクラスではstaticメンバーしか定義できない（staticクラスはインスタンスの作成が不可能）
+
