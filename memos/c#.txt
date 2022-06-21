@@ -217,7 +217,30 @@ C# について
      あまり好ましくない。
      
      
-    
+ 　・動的型付け変数
+ 　　dynamicキーワードを使うことで定義できる。
+   　dynamic型を使うと、コンパイル時に確定しないプロパティアクセス・メソッド呼び出しが可能。
+   　スクリプト言語との連携やDLLの遅延バインディングに利用される。
+     var sx = 1;   // sxの型はint型
+     dynamic dx = 1; // dxの型はdynamic型
+     
+     static dynamic GetX(dynamic obj){
+        return obj.X;
+     }
+     
+   
+   ・オプション引数・名前付き引数
+   　static int Sum(int x = 0, int y = 0, int z = 0){
+        return x + y + z;
+     }
+     int s1 = Sum();     // Sum(0, 0, 0);
+     int s2 = Sum(1);    // Sum(1, 0, 0);
+     int s3 = Sum(1, 2); // Sum(1, 2, 0);
+     省略可能な引数をオプション引数と呼ぶ。
+     名前付き引数は定義した規定値を持つメソッド。
+     int s1 = Sum(x: 1, y: 2, z: 3);  // Sum(1, 2, 3);
+     int s2 = Sum(y: 1, z: 2, x: 3);  // Sum(3, 1, 2);
+     int s3 = Sum(y: 1);              // Sum(0, 1, 0);
     
  
  　・暗黙的型付け
