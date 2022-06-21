@@ -17,6 +17,20 @@ C# について
   }
   コンパイル時に型のチェックが可能、ボクシング・ダウンキャストが不要といった利点がある。
   クラス、構造体、インターフェース、デリゲート、メソッドに対して適用可能。
+  
+・ジェネリックの共変性・反変性
+　ジェネリクスの型引数に対して、in/outを修飾子に指定する。
+  出力（戻り値、get）でしか使わない型にはoutという修飾子を付けることで共変性が認められる
+　public interface IEnumerable<out T>{...}
+  IEnumerable<string> strings = new[] {"aa", "bb", "cc"};
+  IEnumerable<object> objs = strings;
+  // foreach(object x in strings)　としても問題ないためobjs にstrings　を代入してもOK
+  
+  入力（引数、set）でしか使わない型にはinという修飾子を付けることで反変性が認められる
+  public delegate void Action<in T>(T arg);
+  Action<object> objAction = x => { Console.Write(x); };
+  Action<string> strAction = objAction;
+  // objAction("string"); としても問題ないため、strAction にobjAction　を代入してもOK
 
 ・匿名メソッド
 　インライン（コード中に直に）メソッドを記述できる機能。
