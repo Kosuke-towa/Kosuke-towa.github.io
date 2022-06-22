@@ -428,8 +428,48 @@ C# について
   一度すべての例外を拾ってから。非同期処理した後、再throwするような複雑なコードが生成される。
 
   
-    
-      
+・参照戻り値と参照ローカル変数
+　戻り値とローカル変数でも参照渡しが使える。
+　書き方は参照引数とほぼ同じで戻り値の型の前、値を渡す側、受ける側それぞれにref修飾子を付ける。
+　実装例：
+　using System;
+  
+  class Program{
+    static void Main(){
+      var x = 10;
+      var y = 20;
+      // x,yのうち大きい方の参照を返す。
+      ref var m = ref Max(ref x, ref y);
+      m = 0;
+      Console.WriteLine($"{x}, {y}");  // 結果：10, 0
+    }
+    static ref int Max(ref int x, ref int y){
+      if( x < y) return ref y;
+      else return ref x;
+    }
+  }
+  
+・ローカル関数
+　関数の中に入れ子で関数を書ける。入れ子の関数は定義した関数の中でのみ使える。
+　実装例：
+  using System;
+  
+  class Program{
+    static void Main(){
+      // Main関数の中で、ローカル関数fを定義
+      int f(int n) => n >= 1 ? n * f(n-1) : 1;
+      Console.WriteLine(f(10));
+    }
+  }
+  
+・数字リテラル
+　先頭に0xを付けることで16進数、0bを付けることで2進数が表現できる
+　var x = 0xFF;  // FF = 15*16 + 15 = 255
+          0x_FF;  でも可能
+　var y = 0b10010101;  // 10010101 = 128 + 16 + 4 + 1 = 149 
+          0B_10010101;  でも可能
+
+・
 
 　・匿名型
 　　匿名型（anonymous type）を作成できる・
