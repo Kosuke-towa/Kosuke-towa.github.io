@@ -86,20 +86,80 @@
 　　　　配列の要素数を求めるのはsizeof演算子を使う。
 　　　　// sizeof演算子の使い方
     　　sizeof(array) / sizeof(array[0])  配列の長さ（ビット）を配列の要素の長さ（ビット）で割ることで配列の要素数がわかる
-      
-     
+    24．文字
+    　　・文字コード
+        　C言語では文字に対する番号が振られており、その番号に応じて文字を表現している。
+        　ASCIIコードという規格では半角のアルファベットや記号が割り当てられている。
+        　日本語を扱うのはJIS、shift-JIS、EUC、世界中の言語を扱うのはUnicodeなどが普及している。
+        　文字コードは番号のため、文字に対して足し算を行うことができる。
+        　例：
+          　char c = 'A' + 9;
+          　printf("%c\n", c);   // 結果：J
 
+        ・文字列
+        　文字変数の配列を作れば文字列になる。
+        　文字列の最後に特別な値を記憶することで文字数を判定する必要がある。  
+        　この様な文字をEOSと呼ぶ。C言語では'¥0'がEOSとして扱われる。数値としては0になる。
+ 
+        ・EOS（End of String）
+        　文字列の終わりを表す記号で終端文字とも呼ばれる。
+  
+  　　　　文字列の表現例：
+      　　int main(void){
+            char str[6] = { 'M', 'A', 'R', 'I', 'O', '\0' };  ➡　char str[6] = { 'M', 'A', 'R', 'I', 'O' }; でも0が入るため文字列扱いになる。
+            printf("%s\n", str);  // 結果：MARIO
+            return 0;
+          }
+　　　　　
+     　　 文字列リテラルを使うことで省略化できるが、これは初期化の時にしか使えない。
+        　int main(void){
+            char str[] = "MARIO";
+            printf("%s\n", str);  // 結果：MARIO
+            return 0;
+          }
 
+　　　　　後から文字列を代入する場合は、1つ1つ要素に代入する必要がある。
+      　　int main(void){
+            char str[6];
+            str[0] = 'M';
+            str[1] = 'A';
+            str[2] = 'R';
+            str[3] = 'I';
+            str[4] = 'O';
+            str[5] = '\0';
+            printf("%s\n", str);
+            return 0;
+          }
+          
+         ・文字列の連結
+         　特に関数などは不要で直接並べるだけで連結できる。
+          　char str[] = "DRAGON""QUEST";
 
+　　　　　・文字数を数える
+     　　　EOSが出現するまでの数を数えるだけでいい
+        　　実装例：
+          　int i;
+            
+            char str[256];
+            scanf("%s", str);
+            
+            for(i = 0; i != '\0'; i++);
+            printf("%d\n", i);
+            
+            strlen関数を使うのが一般的。
+         
+         
 
 
 -------------------------------------------------------------
 
 ★　関数
 
-  ◎　#include <stdio.h>
+　◎　#include <stdio.h>
       ・printf()
-      ・scanf("入力変換指定子", &変数名);
+      ・scanf("%?", &val);
+          %?　➡　入力変換指定子
+          val　➡　変数名
       　　実装例：
         　#include <stdio.h>
   
@@ -111,21 +171,116 @@
           	printf("%dと%dの合計は%dです。\n", data1, data2, sum);
           	return 0;
           }
+          
+          文字列を入力する場合は変数名前の&が不要になる。
+          char str[32];
+          scanf("%32s", str);  // 桁数を指定することで文字数がオーバーするエラーを防げる
+          printf("%s\n", str);
+      
+      ・sprintf(array, str, val...);
+          printf関数と同じ機能だが、結果を配列の中に記憶する。
+          array　➡　結果を記憶する配列
+          str　➡　書式文字列
+          val　➡　各種変数
+          実装例：
+          char str[16];
+          char str1[12] = "DRAGON";
+          char str2[] = "QUEST";
+          int i = 3;
+          sprintf(str, "%s$s%d\n", str1, str2, i);
+          printf(str);  // 結果：DRAGONQUEST3
+  
+　◎　#include <stdlib.h>
+      ・atoi(str_array);
+         str_array　➡　文字列配列名
+         文字列を数値に変換した結果を変数に代入する
+         実装例：
+         char str[] = "145";
+         int suuti = atoi(str);
+         printf("%d\n", suuti);  // 結果：145
+      ・atof()　➡　実数に変換
 
 　◎　#include <math.h>
-      ・pow(x,y);
-         xのy乗を表す。
+      ・pow(num,n);
+         numのn乗を表す。
          pow(2, n); ➡　2のn乗
+
+　◎　#include <string.h>
+　　　 ・strcpy(str_array1, str_array2);
+    　　　文字列配列同士のコピーに使うのが元々の役目だが、文字列の代入によく使われる。
+          str_array1　➡　コピー先文字列配列名
+          str_array2　➡　コピー元文字列配列名
+          実装例：
+          char str[10];
+          strcpy(str, "MARIO");
+          printf("%s\n", str);  // 結果：MARIO
+          
+      ・strncpy(str_array1, str_array2, str_count);
+        　先頭から指定した文字数だけをコピーするが、最後にEOSが入っていない可能性があるため、必ず付ける。
+        　 str_array1　➡　コピー先文字列配列名
+           str_array2　➡　コピー元文字列配列名
+           str_count　➡　コピーする文字数
+           実装例：
+           char str1[] = "MARIO", str2[10];
+           strncpy(str2, str1, 3);
+           str2[3] = '\0';  // EOSを付与
+           printf("%s\n", str2);  // 結果：MAR
+       
+       ・strcat(str_array1, str_array2);
+           配列に記憶された文字列を連結する。
+           str_array1　➡　元の文字列が記憶された配列
+           str_array2　➡　追加する文字列が記憶された配列
+           実装例：
+           char str1[12] = "DRAGON";  // 結合後の長さが必要
+           char str2[] = "QUEST";
+           strcat(str1, str2);
+       
+       ・strlen(str_array);
+           文字列配列の長さを数える。
+           str_array　➡　文字列配列
+           実装例：
+           int i;
+           char str[256];
+           scanf("%s", str);
+           i = strlen(str);
+           printf("%d\n", i);
+       
+       ・strcmp(str_array1, str_array2);
+           文字列を比較して配列の中身が同じなら0を返す。
+           str_array1　➡　文字配列1
+           str_array2　➡　文字配列2
+           実装例：
+           cahr str1[256], str2[] = "DRAGONQUEST";
+           scanf("%s", str1);
+           if(strcmp(str1, str2) == 0){
+              printf("同じ\n");
+           }else{
+              printf("違う\n");
+           }
+           
 
 　◎　#include <memory.h>
  　　　・memcpy(array1, array2, array_size); 
+　　　    array1の全要素をarray2へコピーする。
           array1　➡　コピー先配列名
           array2　➡　コピー元配列名
           array_size ➡　配列全体のサイズ
-        　実装例：array1の全要素をarray2へコピー
+        　実装例：
          　memcpy(array2, array1, sizeof(array1));
 　　　　　　バッファオーバーラン　➡　memcpy関数は配列の長さを考慮しない。コピー元の配列がコピー先より長くても無理やりコピーしてしまうため、
       　　　　　　　　　　　　　　　　はみ出たデータは別の変数や配列に上書きされてしまう。結果、重大なエラーとなる。
+                      
+　◎　#include <ctype.h>
+       ・isalnum(val);
+       　　引数が英数字（A-Za-z0-9）かどうか判定する。
+           val　➡　判定する変数名
+       ・isdigit()  10進数（0-9）かを判定
+       ・isxdigit()  16進数（A-Fa-f0-9)かを判定
+       ・isalpha()  英字（A-Za-z）かを判定
+       ・isupper()　英大文字（A-Z）かを判定
+       ・islower()　英小文字（a-z）かを判定
+       ・ispunct()　記号（!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~）かを判定
+ 
 
 -------------------------------------------------------------
 
@@ -197,3 +352,4 @@
 　型の記載例：
   （変換する型）数値や変数名
 　　(int)(1.05 * 360)); // 378
+
